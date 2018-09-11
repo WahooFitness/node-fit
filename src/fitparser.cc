@@ -360,7 +360,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     sessionMsg.SetTimestamp(GET_SINT("timestamp"));
     sessionMsg.SetStartTime(GET_SINT("startTime"));
     sessionMsg.SetTotalElapsedTime(GET_SNUM("totalElapsedTime"));
-    sessionMsg.SetTotalTimerTime(GET_SNUM("totalElapsedTime"));
+    sessionMsg.SetTotalTimerTime(GET_SNUM("totalTimerTime"));
     sessionMsg.SetTotalDistance(GET_SINT("totalDistance"));
     // Fixes for Garmin Physio
     // message index (0)
@@ -400,8 +400,19 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
 
     sessionMsg.SetEvent(FIT_EVENT_ACTIVITY);
     // todo: set avg speed, max speed, calories and other summary values
+    // set average/max speed
     sessionMsg.SetAvgSpeed(GET_SNUM("avgSpeed"));
     sessionMsg.SetMaxSpeed(GET_SNUM("maxSpeed"));
+    // set average/max cadence
+    sessionMsg.SetAvgCadence(GET_SNUM("avgCadence"));
+    sessionMsg.SetMaxCadence(GET_SNUM("maxCadence"));
+    // set average/max power
+    sessionMsg.SetAvgPower(GET_SNUM("avgPower"));
+    sessionMsg.SetMaxPower(GET_SNUM("maxPower"));
+    // set average/max heartRate
+    sessionMsg.SetAvgHeartRate(GET_SNUM("avgHeartRate"));
+    sessionMsg.SetMaxHeartRate(GET_SNUM("maxHeartRate"));
+
     // todo: add laps to session. Add them when target power goes from rest to active or vise versa
 
     Local<Array> jsonLaps = Local<Array>::Cast(inputSession->Get(String::NewFromUtf8(isolate, "laps")));
@@ -419,6 +430,12 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
       lapMsg.SetTotalDistance(GET_LNUM("totalDistance"));
       lapMsg.SetMaxSpeed(GET_LNUM("maxSpeed"));
       lapMsg.SetAvgSpeed(GET_LNUM("avgSpeed"));
+      lapMsg.SetMaxCadence(GET_LNUM("maxCadence"));
+      lapMsg.SetAvgCadence(GET_LNUM("avgCadence"));
+      lapMsg.SetMaxPower(GET_LNUM("maxPower"));
+      lapMsg.SetAvgPower(GET_LNUM("avgPower"));
+      lapMsg.SetMaxHeartRate(GET_LNUM("maxHeartRate"));
+      lapMsg.SetAvgHeartRate(GET_LNUM("avgHeartRate"));
       encode.Write(lapMsg);
     }
 
