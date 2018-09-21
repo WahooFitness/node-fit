@@ -365,6 +365,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     sessionMsg.SetTrainingStressScore(GET_SINT("trainingStressScore"));
     sessionMsg.SetIntensityFactor(GET_SINT("intensityFactor"));
     // Fixes for Garmin Physio
+    sessionMsg.SetTotalMovingTime(GET_SNUM("totalTimerTime"));
     // message index (0)
     sessionMsg.SetMessageIndex(0);
 
@@ -414,6 +415,10 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     // set average/max heartRate
     sessionMsg.SetAvgHeartRate(GET_SNUM("avgHeartRate"));
     sessionMsg.SetMaxHeartRate(GET_SNUM("maxHeartRate"));
+    // set threshold power
+    sessionMsg.SetThresholdPower(GET_SNUM("thresholdPower"));
+    // set total work
+    sessionMsg.SetTotalWork(GET_SNUM("totalWork"));
 
     // todo: add laps to session. Add them when target power goes from rest to active or vise versa
 
@@ -438,6 +443,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
       lapMsg.SetAvgPower(GET_LNUM("avgPower"));
       lapMsg.SetMaxHeartRate(GET_LNUM("maxHeartRate"));
       lapMsg.SetAvgHeartRate(GET_LNUM("avgHeartRate"));
+      lapMsg.SetTotalWork(GET_LNUM("totalWork"));
       encode.Write(lapMsg);
     }
 
