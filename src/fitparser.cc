@@ -467,13 +467,27 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     fit::RecordMesg recordMsg;
     Local<Object> inputRecord = Local<Object>::Cast(jsonRecords->Get(i));
 
-    //cout << "[timestamp] " << GET_RINT("timestamp") << endl;
+    cout << "[timestamp] " << GET_RINT("timestamp") << endl;
 
     recordMsg.SetTimestamp(GET_RINT("timestamp"));
+    cout << "[power] " << GET_RINT("power") << " " << GET_RSTR("power") << endl;
+    // Sam, This check doesn't work but we need to do something like this so we don't call recordMsg.SetPower if power is undefined.
+    if (GET_RSTR("power") == GET_RSTR("blah")) {
+      cout << "power is undefined" << endl;
+    }
+
     recordMsg.SetPower(GET_RINT("power"));
+    cout << "[speed] " << GET_RNUM("speed") << " " << GET_RSTR("speed") << endl;
+
     recordMsg.SetSpeed(GET_RNUM("speed"));
-    recordMsg.SetDistance(GET_RINT("distance"));
+    cout << "[distance] " << GET_RNUM("distance") << endl;
+
+    recordMsg.SetDistance(GET_RNUM("distance"));
+    cout << "[cadence] " << GET_RINT("cadence") << " " << GET_RINT("cadence") << endl;
+
     recordMsg.SetCadence(GET_RINT("cadence"));
+    cout << "[heart_rate] " << GET_RINT("heart_rate") << endl;
+
     recordMsg.SetHeartRate(GET_RINT("heart_rate"));
 
     encode.Write(recordMsg);

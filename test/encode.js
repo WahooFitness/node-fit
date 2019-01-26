@@ -14,6 +14,7 @@ describe("encode()", function() {
          var obj = require('./activity-from-data.js');
          var buffer= fitParser.encode(obj);
          console.log("buffer.length: "+buffer.length)
+         // console.log("buffer", buffer)
          buffer.should.be.a.String;
          buffer.should.not.be.empty;
       });
