@@ -352,7 +352,8 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     sessionMsg.SetTotalTimerTime(GET_SNUM("totalTimerTime"));
     sessionMsg.SetTotalDistance(GET_SINT("totalDistance"));
     sessionMsg.SetTrainingStressScore(GET_SINT("trainingStressScore"));
-    sessionMsg.SetIntensityFactor(GET_SINT("intensityFactor"));
+    sessionMsg.SetNormalizedPower(GET_SINT("normalizedPower"));
+    sessionMsg.SetIntensityFactor(GET_SNUM("intensityFactor"));
     // Fixes for Garmin Physio
     sessionMsg.SetTotalMovingTime(GET_SNUM("totalTimerTime"));
     // message index (0)
