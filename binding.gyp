@@ -38,6 +38,15 @@
           }
         }]
       ],
+      'configurations': {
+        'Release': {
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+              'ExceptionHandling': 1, # adds /EHsc flag
+            }
+          }
+        }
+      },
       "include_dirs" : ["<!(node -e \"require('nan')\")"]
     }
   ]
