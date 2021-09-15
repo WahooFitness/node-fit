@@ -27,21 +27,21 @@ using namespace Nan;
 using v8::Isolate;
 using node::AtExit;
 
-#define GET_STR(s) std::string(*String::Utf8Value(inputJson->Get(String::NewFromUtf8(isolate, s)))).c_str()
-#define GET_INT(s) inputJson->Get(String::NewFromUtf8(isolate, s))->Uint32Value()
-#define GET_NUM(s) inputJson->Get(String::NewFromUtf8(isolate, s))->NumberValue()
+#define GET_STR(s) std::string(*String::Utf8Value(isolate, inputJson->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked())).c_str()
+#define GET_INT(s) inputJson->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->Uint32Value(context).ToChecked()
+#define GET_NUM(s) inputJson->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->NumberValue(context).ToChecked()
 
-#define GET_SSTR(s) std::string(*String::Utf8Value(inputSession->Get(String::NewFromUtf8(isolate, s)))).c_str()
-#define GET_SINT(s) inputSession->Get(String::NewFromUtf8(isolate, s))->Uint32Value()
-#define GET_SNUM(s) inputSession->Get(String::NewFromUtf8(isolate, s))->NumberValue()
+#define GET_SSTR(s) std::string(*String::Utf8Value(isolate, inputSession->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked())).c_str()
+#define GET_SINT(s) inputSession->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->Uint32Value(context).ToChecked()
+#define GET_SNUM(s) inputSession->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->NumberValue(context).ToChecked()
 
-#define GET_RSTR(s) std::string(*String::Utf8Value(inputRecord->Get(String::NewFromUtf8(isolate, s)))).c_str()
-#define GET_RINT(s) inputRecord->Get(String::NewFromUtf8(isolate, s))->Uint32Value()
-#define GET_RNUM(s) inputRecord->Get(String::NewFromUtf8(isolate, s))->NumberValue()
+#define GET_RSTR(s) std::string(*String::Utf8Value(inputRecord->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked())).c_str()
+#define GET_RINT(s) inputRecord->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->Uint32Value(context).ToChecked()
+#define GET_RNUM(s) inputRecord->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->NumberValue(context).ToChecked()
 
-#define GET_LSTR(s) std::string(*String::Utf8Value(inputLap->Get(String::NewFromUtf8(isolate, s)))).c_str()
-#define GET_LINT(s) inputLap->Get(String::NewFromUtf8(isolate, s))->Uint32Value()
-#define GET_LNUM(s) inputLap->Get(String::NewFromUtf8(isolate, s))->NumberValue()
+#define GET_LSTR(s) std::string(*String::Utf8Value(inputLap->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked())).c_str()
+#define GET_LINT(s) inputLap->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->Uint32Value(context).ToChecked()
+#define GET_LNUM(s) inputLap->Get(context, String::NewFromUtf8(isolate, s).ToLocalChecked()).ToLocalChecked()->NumberValue(context).ToChecked()
 
 v8::Persistent<v8::Function> FitParser::constructor;
 
@@ -54,10 +54,12 @@ class Listener : public fit::MesgListener,
 public:
   Isolate* isolateListener;
   Local<Function> cbListener;
+  v8::Local<v8::Context> context;
 
   void Init(Isolate* isolate, Local<Function> cb) {
     isolateListener = isolate;
     cbListener = cb;
+    context = v8::Context::New(isolate);
   }
 
   wstring PrintValues(const fit::FieldBase &field)
@@ -158,15 +160,15 @@ public:
       case FIT_BASE_TYPE_FLOAT32:
       case FIT_BASE_TYPE_FLOAT64:
         // printf("%f\n", field->GetFLOAT64Value());
-        localObj->Set(String::NewFromUtf8(isolateListener, profileField->name.c_str()),
+        localObj->Set(context, String::NewFromUtf8(isolateListener, profileField->name.c_str()).ToLocalChecked(),
           Number::New(isolateListener, field->GetFLOAT64Value()));
         break;
       case FIT_BASE_TYPE_STRING:
         // printf("%ls\n", field->GetSTRINGValue().c_str());
         char charValue[500];
         sprintf(charValue, "%ls\n", field->GetSTRINGValue().c_str());
-        localObj->Set(String::NewFromUtf8(isolateListener, profileField->name.c_str()),
-          v8::String::NewFromUtf8(isolateListener, charValue));
+        localObj->Set(context, String::NewFromUtf8(isolateListener, profileField->name.c_str()).ToLocalChecked(),
+          v8::String::NewFromUtf8(isolateListener, charValue).ToLocalChecked());
         break;
       default:
         break;
@@ -196,9 +198,9 @@ public:
       // std::wcout << strValue;
 
       char charValue[1000];
-      sprintf(charValue, "%ls\n", &strValue);
-      obj->Set(String::NewFromUtf8(isolateListener, field->GetName().c_str()),
-        v8::String::NewFromUtf8(isolateListener, charValue));
+      wsprintf(charValue, "%s\n", &strValue);
+      obj->Set(context, String::NewFromUtf8(isolateListener, field->GetName().c_str()).ToLocalChecked(),
+        v8::String::NewFromUtf8(isolateListener, charValue).ToLocalChecked());
     }
 
     for (auto devField : mesg.GetDeveloperFields())
@@ -213,10 +215,10 @@ public:
       // std::wcout << strValue;
 
       char charValue[500];
-      sprintf(charValue, "%ls\n", &strValue);
+      wsprintf(charValue, "%s\n", &strValue);
 
-      obj->Set(String::NewFromUtf8(isolateListener, devField.GetName().c_str()),
-        v8::String::NewFromUtf8(isolateListener, charValue));
+      obj->Set(context, String::NewFromUtf8(isolateListener, devField.GetName().c_str()).ToLocalChecked(),
+        v8::String::NewFromUtf8(isolateListener, charValue).ToLocalChecked());
     }
 
     /*Local<Value> argv[argc] = obj;
@@ -248,22 +250,24 @@ time_t ParseDate(const char *str)
 void FitParser::Init(v8::Local<v8::Object> exports)
 {
   Isolate *isolate = exports->GetIsolate();
+  v8::Local<v8::Context> context = v8::Context::New(isolate);
 
   // Prepare constructor template
   Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
-  tpl->SetClassName(String::NewFromUtf8(isolate, "FitParser"));
+  tpl->SetClassName(String::NewFromUtf8(isolate, "FitParser").ToLocalChecked());
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   // Prototype
   NODE_SET_PROTOTYPE_METHOD(tpl, "encode", Encode);
   NODE_SET_PROTOTYPE_METHOD(tpl, "decode", Decode);
 
-  constructor.Reset(isolate, tpl->GetFunction());
-  exports->Set(String::NewFromUtf8(isolate, "FitParser"), tpl->GetFunction());
+  constructor.Reset(isolate, tpl->GetFunction(context).ToLocalChecked());
+  exports->Set(context, String::NewFromUtf8(isolate, "FitParser").ToLocalChecked(), tpl->GetFunction(context).ToLocalChecked());
 }
 
 void FitParser::New(const v8::FunctionCallbackInfo<v8::Value> &args)
 {
   Isolate *isolate = args.GetIsolate();
+  v8::Local<v8::Context> context = v8::Context::New(isolate);
 
   if (args.IsConstructCall())
   {
@@ -287,8 +291,11 @@ void FitParser::New(const v8::FunctionCallbackInfo<v8::Value> &args)
 void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
 {
   const unsigned argc = 1;
+
   Isolate *isolate = args.GetIsolate();
-  Local<Object> inputJson = args[0]->ToObject();
+  v8::Local<v8::Context> context = v8::Context::New(isolate);
+
+  Local<Object> inputJson = args[0]->ToObject(context).ToLocalChecked();
   Local<Function> cb = Local<Function>::Cast(args[1]);
 
   fit::Encode encode(fit::ProtocolVersion::V20);
@@ -308,8 +315,8 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
   if (!file.is_open())
   {
     // cout << "Error opening file ExampleActivityFile.fit" << endl;
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Error opening file ExampleActivityFile.fit")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Error opening file ExampleActivityFile.fit").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
     return;
   }
 
@@ -333,7 +340,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
   encode.Write(deviceInfoMesg);
 
   // sessionMsg SECTION
-  Local<Array> sessions = Local<Array>::Cast(inputJson->Get(String::NewFromUtf8(isolate, "sessions")));
+  Local<Array> sessions = Local<Array>::Cast(inputJson->Get(context, String::NewFromUtf8(isolate, "sessions").ToLocalChecked()).ToLocalChecked());
   if (sessions->IsArray()) {
     sessionsLen = sessions->Length();
   }
@@ -342,7 +349,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
   for (int i = 0; i < sessionsLen; i++)
   {
     fit::SessionMesg sessionMsg;
-    Local<Object> inputSession = Local<Object>::Cast(sessions->Get(i));
+    Local<Object> inputSession = Local<Object>::Cast(sessions->Get(context, i).ToLocalChecked());
 
     // cout << "[timestampS] " << GET_SINT("timestamp") << endl;
 
@@ -412,7 +419,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
 
     // todo: add laps to session. Add them when target power goes from rest to active or vise versa
 
-    Local<Array> jsonLaps = Local<Array>::Cast(inputSession->Get(String::NewFromUtf8(isolate, "laps")));
+    Local<Array> jsonLaps = Local<Array>::Cast(inputSession->Get(context, String::NewFromUtf8(isolate, "laps").ToLocalChecked()).ToLocalChecked());
     if (jsonLaps->IsArray())
     {
       jsonLapsLen = jsonLaps->Length();
@@ -421,7 +428,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
     for (int i = 0; i < jsonLapsLen; i++)
     {
       fit::LapMesg lapMsg;
-      Local<Object> inputLap = Local<Object>::Cast(jsonLaps->Get(i));
+      Local<Object> inputLap = Local<Object>::Cast(jsonLaps->Get(context, i).ToLocalChecked());
       lapMsg.SetTimestamp(GET_LNUM("timestamp"));
       lapMsg.SetStartTime(GET_LNUM("startTime"));
       lapMsg.SetTotalElapsedTime(GET_LNUM("totalElapsedTime"));
@@ -437,7 +444,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
       lapMsg.SetTotalWork(GET_LNUM("totalWork"));
 
       // cout << "Records" << endl;
-      Local<Array> jsonRecords = Local<Array>::Cast(inputLap->Get(String::NewFromUtf8(isolate, "records")));
+      Local<Array> jsonRecords = Local<Array>::Cast(inputLap->Get(context, String::NewFromUtf8(isolate, "records").ToLocalChecked()).ToLocalChecked());
       if (jsonRecords->IsArray()) {
         jsonRecordsLen = jsonRecords->Length();
       }
@@ -445,7 +452,7 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
       for (int i = 0; i < jsonRecordsLen; i++)
       {
         fit::RecordMesg recordMsg;
-        Local<Object> inputRecord = Local<Object>::Cast(jsonRecords->Get(i));
+        Local<Object> inputRecord = Local<Object>::Cast(jsonRecords->Get(context, i).ToLocalChecked());
 
         //cout << "[timestamp] " << GET_RINT("timestamp") << endl;
 
@@ -481,8 +488,8 @@ void FitParser::Encode(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
     // cout << "Error closing encode.\n"
     //      << endl;
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Error closing encode.")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Error closing encode.").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
     return;
   }
 
@@ -511,7 +518,9 @@ void FitParser::Decode(const v8::FunctionCallbackInfo<v8::Value> &args)
   std::fstream file;
 
   Isolate *isolate = args.GetIsolate();
-  String::Utf8Value fileName(args[0]->ToString());
+  v8::Local<v8::Context> context = v8::Context::New(isolate);
+
+  String::Utf8Value fileName(isolate, args[0]->ToString(context).ToLocalChecked());
   Local<Function> cb = Local<Function>::Cast(args[1]);
 
   Listener listener;
@@ -521,22 +530,22 @@ void FitParser::Decode(const v8::FunctionCallbackInfo<v8::Value> &args)
 
   if (!file.is_open())
   {
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "File is not open")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "File is not open").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
     return;
   }
 
   if (!decode.IsFIT(file))
   {
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "File is not FIT")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "File is not FIT").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
     return;
   }
 
   if (!decode.CheckIntegrity(file))
   {
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "FIT file integrity failed.\nAttempting to decode...")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "FIT file integrity failed.\nAttempting to decode...").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
     return;
   }
 
@@ -550,7 +559,7 @@ void FitParser::Decode(const v8::FunctionCallbackInfo<v8::Value> &args)
 
   } catch (const fit::RuntimeException &e) {
     printf("Exception decoding file: %s\n", e.what());
-    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Exception decoding file")};
-    cb->Call(Null(isolate), argc, argv);
+    Local<Value> argv[argc] = {String::NewFromUtf8(isolate, "Exception decoding file").ToLocalChecked()};
+    cb->Call(context, Null(isolate), argc, argv);
   }
 }
